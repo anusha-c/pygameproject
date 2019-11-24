@@ -131,7 +131,7 @@ def tick(keys):
             start_movement = True
 
         if start_movement:
-            xspeed = 5
+            xspeed = -5
             yspeed = 5
             time = str(counter // 30)
             time_tot = gamebox.from_text(785, 15, time, 22, "orange")
@@ -140,20 +140,23 @@ def tick(keys):
             if pygame.K_LEFT in keys:
                 platform.x -= 5
 
-            ball.move(xspeed, yspeed)
-            
+            #ball.move(xspeed, yspeed)
+
             if ball.touches(platform):
-                ball.move(xspeed*20, -yspeed*20)
-                
+                yspeed = -yspeed
+
+            ball.move(xspeed, yspeed)
+
             for k in walls:
                 if ball.touches(k):
                     walls.remove(k)
-                    yspeed = -yspeed
-                    ball.move(xspeed, yspeed)
+                    #xspeed = - xspeed
+                    #yspeed = -yspeed
+                    #ball.move(xspeed, yspeed)
+
                 camera.draw(k)
-            for z in sides:
-                if ball.touches(z):
-                    xspeed = -xspeed
+            for l in sides:
+                camera.draw(l)
 
             camera.draw(time_tot)
             camera.draw(platform)
