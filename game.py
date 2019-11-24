@@ -141,10 +141,10 @@ def tick(keys):
                 platform.x -= 5
 
             ball.move(xspeed, yspeed)
-
+            
             if ball.touches(platform):
-                ball.move(xspeed, -yspeed)
-
+                ball.move(xspeed*20, -yspeed*20)
+                
             for k in walls:
                 if ball.touches(k):
                     walls.remove(k)
@@ -152,7 +152,7 @@ def tick(keys):
                     ball.move(xspeed, yspeed)
                 camera.draw(k)
             for z in sides:
-                if ball.touches(z)
+                if ball.touches(z):
                     xspeed = -xspeed
 
             camera.draw(time_tot)
