@@ -18,6 +18,10 @@ screen = 0
 counter = 0
 start_movement = False
 
+ball_velocity = -3
+ball.xspeed = ball_velocity
+ball.yspeed = ball_velocity
+
 camera.clear("black")
 name_text = gamebox.from_text(400, 200, "Enter your name in the run window.", 50, "blue")
 camera.draw(name_text)
@@ -121,48 +125,46 @@ def tick(keys):
                         walls.append(gamebox.from_image(i, j, file_loc))
                     elif j == 175:
                         walls.append(gamebox.from_image(i - 25, j, file_loc))
-        for i in range(50, 825, 50):
-            for j in range(150, 225, 25):
-                if j == 150 or j == 200:
-                    walls.append(gamebox.from_image(i, j, "Pitt Logo Resized.png"))
-                elif j == 175:
-                    walls.append(gamebox.from_image(i - 25, j, "Pitt Logo Resized.png"))
         if pygame.K_SPACE in keys:
             start_movement = True
 
         if start_movement:
-            xspeed = -5
-            yspeed = 5
+            counter += 1
+            ball.x += ball.xspeed
+            ball.y += ball.yspeed
             time = str(counter // 30)
             time_tot = gamebox.from_text(785, 15, time, 22, "orange")
-            if pygame.K_RIGHT in keys:
-                platform.x += 5
-            if pygame.K_LEFT in keys:
-                platform.x -= 5
 
-            #ball.move(xspeed, yspeed)
+            if pygame.K_RIGHT in keys:
+                platform.x += 10
+            if pygame.K_LEFT in keys:
+                platform.x -= 10
 
             if ball.touches(platform):
-                yspeed = -yspeed
-
-            ball.move(xspeed, yspeed)
+                ball.yspeed = -ball.yspeed
 
             for k in walls:
+                camera.draw(k)
                 if ball.touches(k):
                     walls.remove(k)
-                    #xspeed = - xspeed
-                    #yspeed = -yspeed
-                    #ball.move(xspeed, yspeed)
+                    ball.yspeed = -ball.yspeed
 
-                camera.draw(k)
-            for l in sides:
-                camera.draw(l)
+            a = 0
+            while a < 3:
+                if a == 0 or a == 2:
+                    if ball.touches(sides[a]):
+                        ball.xspeed = -ball.xspeed
+                if a == 1:
+                    if ball.touches(sides[a]):
+                        ball.yspeed = -ball.yspeed
+                camera.draw(sides[a])
+                a += 1
+
+            ball.move(ball.xspeed, ball.yspeed)
 
             camera.draw(time_tot)
             camera.draw(platform)
             camera.draw(ball)
-
-            counter += 1
 
     camera.display()
 
