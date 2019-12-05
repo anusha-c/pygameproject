@@ -7,9 +7,10 @@ import random
 camera = gamebox.Camera(800, 400)
 walls = []
 sides = [
-    gamebox.from_color(0, 400, "blue", 50, 800),
+    gamebox.from_color(-170, 400, "blue", 400, 800),
     gamebox.from_color(400, 0, "blue", 800, 50),
-    gamebox.from_color(800, 400, "blue", 50, 800)
+    gamebox.from_color(970, 400, "blue", 400, 800),
+    gamebox.from_color(400, 400, "blue", 800, 50)
 ]
 ball = gamebox.from_color(400, 300, "orange", 10, 10)
 platform = gamebox.from_color(400, 350, "blue", 200, 20)
@@ -29,7 +30,6 @@ camera.display()
 name = ""
 while name == "":
     name = input("What is your name? ")
-
 
 
 def tick(keys):
@@ -99,9 +99,7 @@ def tick(keys):
 
     # elif start is True and screen == 2:
     elif start is True:
-        level = 0
-        if len(walls) == 0:
-            level += 1
+        level = 1
         if level == 1:
             file_loc = "Pitt Logo Resized.png"
         if level == 2:
@@ -119,12 +117,14 @@ def tick(keys):
         if level == 8:
             file_loc = "Virginia Tech Logo Resized.png"
         if len(walls) == 0:
-            for i in range(50, 825, 50):
+            for i in range(100, 750, 50):
                 for j in range(150, 225, 25):
                     if j == 150 or j == 200:
                         walls.append(gamebox.from_image(i, j, file_loc))
                     elif j == 175:
                         walls.append(gamebox.from_image(i - 25, j, file_loc))
+            level += 1
+            start_movement = False
         if pygame.K_SPACE in keys:
             start_movement = True
 
@@ -140,27 +140,35 @@ def tick(keys):
             if pygame.K_LEFT in keys:
                 platform.x -= 10
 
-            if ball.touches(platform):
+            if ball.top_touches(platform) or ball.bottom_touches(platform):
                 ball.yspeed = -ball.yspeed
+            elif ball.right_touches(platform) or ball.left_touches(platform):
+                ball.xspeed = -ball.xspeed
 
             for k in walls:
                 camera.draw(k)
-                if ball.touches(k):
+                if ball.top_touches(k) or ball.bottom_touches(k):
                     walls.remove(k)
                     ball.yspeed = -ball.yspeed
+                elif ball.right_touches(k) or ball.left_touches(k):
+                    walls.remove(k)
+                    ball.xspeed = -ball.xspeed
 
             a = 0
-            while a < 3:
+            while a < 4:
                 if a == 0 or a == 2:
                     if ball.touches(sides[a]):
                         ball.xspeed = -ball.xspeed
-                if a == 1:
+                    if platform.touches(sides[a]):
+                        platform.move_to_stop_overlapping(sides[a])
+                elif a == 1 or a == 3:
                     if ball.touches(sides[a]):
                         ball.yspeed = -ball.yspeed
                 camera.draw(sides[a])
                 a += 1
 
             ball.move(ball.xspeed, ball.yspeed)
+
 
             camera.draw(time_tot)
             camera.draw(platform)
