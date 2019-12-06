@@ -7,21 +7,19 @@ import random
 camera = gamebox.Camera(800, 400)
 walls = []
 sides = [
-    gamebox.from_color(-170, 400, "blue", 400, 800),
+    gamebox.from_color(0, 400, "blue", 50, 800),
     gamebox.from_color(400, 0, "blue", 800, 50),
-    gamebox.from_color(970, 400, "blue", 400, 800),
-    gamebox.from_color(400, 400, "blue", 800, 50)
+    gamebox.from_color(800, 400, "blue", 50, 800)
 ]
 ball = gamebox.from_color(400, 300, "orange", 10, 10)
 platform = gamebox.from_color(400, 350, "blue", 200, 20)
 start = False
+lost = False
 screen = 0
 counter = 0
-start_movement = False
+lives = 3
 
-ball_velocity = -3
-ball.xspeed = ball_velocity
-ball.yspeed = ball_velocity
+start_movement = False
 
 camera.clear("black")
 name_text = gamebox.from_text(400, 200, "Enter your name in the run window.", 50, "blue")
@@ -33,7 +31,11 @@ while name == "":
 
 
 def tick(keys):
-    global start, screen, counter, start_movement
+    global start, screen, counter, start_movement, lost, lives
+    high_score = 0
+    if counter//30 > high_score:
+        high_score = counter//30
+
     camera.clear("black")
     for l in sides:
         camera.draw(l)
@@ -46,8 +48,18 @@ def tick(keys):
     if pygame.K_1 in keys:
         start = False
         screen = 1
+    if pygame.K_2 in keys:
+        start = False
+        screen = 2
 
-    if start is False and screen == 0:
+    if start is False and lost:
+        game_over = gamebox.from_text(400, 200, "GAME OVER: PRESS SPACEBAR TO RESTART, 0 to EXIT", 30, "RED")
+        camera.draw(game_over)
+        if pygame.K_0 in keys:
+            screen = 4
+            lost = False
+
+    if start is False and (screen == 0 or screen == 4) and lost is False:
         welcome = gamebox.from_text(400, 60, (name + ", welcome to..."), 35, "orange")
         title = gamebox.from_text(400, 110, "Break the Rock", 75, "orange")
         authors = gamebox.from_text(400, 175, "By Alex Poley (awp5ud) and Anusha Choudhary (ac7ncw)", 35, "orange")
@@ -97,9 +109,21 @@ def tick(keys):
         camera.draw(rules5)
         camera.draw(rules6)
 
-    # elif start is True and screen == 2:
+    elif start is False and screen == 2:
+        home2 = gamebox.from_text(90, 13, "Press 0 to return home.", 22, "orange")
+        high1 = gamebox.from_text(400, 40, "High Score", 35, "orange")
+        high2 = gamebox.from_text(400, 70, "The high score is " + str(high_score), 35, "orange")
+
+        camera.draw(home2)
+        camera.draw(high1)
+        camera.draw(high2)
+
+
     elif start is True:
-        level = 1
+        level = 0
+
+        if len(walls) == 0:
+            level += 1
         if level == 1:
             file_loc = "Pitt Logo Resized.png"
         if level == 2:
@@ -117,62 +141,68 @@ def tick(keys):
         if level == 8:
             file_loc = "Virginia Tech Logo Resized.png"
         if len(walls) == 0:
-            for i in range(100, 750, 50):
+            for i in range(50, 825, 50):
                 for j in range(150, 225, 25):
                     if j == 150 or j == 200:
                         walls.append(gamebox.from_image(i, j, file_loc))
                     elif j == 175:
                         walls.append(gamebox.from_image(i - 25, j, file_loc))
-            level += 1
-            start_movement = False
+        for i in range(50, 825, 50):
+            for j in range(150, 225, 25):
+                if j == 150 or j == 200:
+                    walls.append(gamebox.from_image(i, j, "Pitt Logo Resized.png"))
+                elif j == 175:
+                    walls.append(gamebox.from_image(i - 25, j, "Pitt Logo Resized.png"))
         if pygame.K_SPACE in keys:
             start_movement = True
+            lives = 3
 
         if start_movement:
-            counter += 1
-            ball.x += ball.xspeed
-            ball.y += ball.yspeed
+            if ball.y > 400:
+                lives -= 1
+                ball.x = 400
+                ball.y = 300
+
+            lives_display = gamebox.from_text(620, 15, "Lives: " + str(lives), 22, "orange")
+
+            if lives == 0:
+                lost = True
+                start = False
+            xspeed = 5
+            yspeed = 5
             time = str(counter // 30)
-            time_tot = gamebox.from_text(785, 15, time, 22, "orange")
-
+            time_tot = gamebox.from_text(760, 15, "Score:" + time, 22, "orange")
             if pygame.K_RIGHT in keys:
-                platform.x += 10
+                platform.x += 5
             if pygame.K_LEFT in keys:
-                platform.x -= 10
+                platform.x -= 5
 
-            if ball.top_touches(platform) or ball.bottom_touches(platform):
-                ball.yspeed = -ball.yspeed
-            elif ball.right_touches(platform) or ball.left_touches(platform):
-                ball.xspeed = -ball.xspeed
+            ball.move(xspeed, yspeed)
+
+            if ball.touches(platform):
+                yspeed = -yspeed*10
+
+            ball.move(xspeed, yspeed)
 
             for k in walls:
+                if ball.touches(k):
+                    walls.remove(k)
+                    #xspeed = - xspeed
+                    #yspeed = -yspeed
+                    #ball.move(xspeed, yspeed)
+
                 camera.draw(k)
-                if ball.top_touches(k) or ball.bottom_touches(k):
-                    walls.remove(k)
-                    ball.yspeed = -ball.yspeed
-                elif ball.right_touches(k) or ball.left_touches(k):
-                    walls.remove(k)
-                    ball.xspeed = -ball.xspeed
-
-            a = 0
-            while a < 4:
-                if a == 0 or a == 2:
-                    if ball.touches(sides[a]):
-                        ball.xspeed = -ball.xspeed
-                    if platform.touches(sides[a]):
-                        platform.move_to_stop_overlapping(sides[a])
-                elif a == 1 or a == 3:
-                    if ball.touches(sides[a]):
-                        ball.yspeed = -ball.yspeed
-                camera.draw(sides[a])
-                a += 1
-
-            ball.move(ball.xspeed, ball.yspeed)
-
+            for l in sides:
+                camera.draw(l)
 
             camera.draw(time_tot)
             camera.draw(platform)
             camera.draw(ball)
+            camera.draw(lives_display)
+
+            counter += 1
+
+
 
     camera.display()
 
@@ -185,5 +215,6 @@ def tick(keys):
     # Could make level codes that could also be a menu option to access levels you had reached prior
     # Or could instead make a user ID that allows you to save progress
 
+
 tps = 30
-gamebox.timer_loop(tps, tick)
+gamebox.timer_loop(tps, tick) 
