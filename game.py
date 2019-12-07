@@ -16,6 +16,7 @@ platform = gamebox.from_color(400, 350, "blue", 200, 20)
 health = 100
 health_x = 620
 health_color = "green"
+health_bar = gamebox.from_color(health_x, 15, health_color, health, 10)
 start = False
 lost = False
 screen = 0
@@ -35,11 +36,9 @@ while name == "":
 
 def tick(keys):
     global start, screen, counter, start_movement, lost, lives, health, health_x, health_color
-    health_bar = gamebox.from_color(health_x, 15, health_color, health, 10)
     high_score = 0
     if counter//30 > high_score:
         high_score = counter//30
-
     camera.clear("black")
     for l in sides:
         camera.draw(l)
@@ -62,6 +61,9 @@ def tick(keys):
         if pygame.K_0 in keys:
             screen = 4
             lost = False
+            health = 100
+            health_x = 620
+            health_color = "green"
 
     if start is False and (screen == 0 or screen == 4) and lost is False:
         welcome = gamebox.from_text(400, 60, (name + ", welcome to..."), 35, "orange")
@@ -122,10 +124,8 @@ def tick(keys):
         camera.draw(high1)
         camera.draw(high2)
 
-
-    elif start is True:
+    elif start:
         level = 0
-
         if len(walls) == 0:
             level += 1
         if level == 1:
@@ -162,6 +162,8 @@ def tick(keys):
             lives = 3
 
         if start_movement:
+            health_bar = gamebox.from_color(health_x, 15, health_color, health, 10)
+            camera.draw(health_bar)
             if ball.y > 400:
                 lives -= 1
                 health -= 40
