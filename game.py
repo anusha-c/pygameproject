@@ -12,7 +12,7 @@ sides = [
     gamebox.from_color(970, 400, "blue", 400, 800),
 ]
 ball = gamebox.from_color(400, 300, "orange", 10, 10)
-platform = gamebox.from_color(400, 350, "blue", 200, 20)
+platform = gamebox.from_color(400, 350, "blue", 160, 20)
 start_movement = False
 start = False
 lost = False
@@ -24,10 +24,13 @@ health_x = 620
 health_color = "green"
 health_bar = gamebox.from_color(health_x, 15, health_color, health, 10)
 start_movement = False
+score = 0
+high_name = ""
 
 ball_velocity = -3
 ball.xspeed = ball_velocity
 ball.yspeed = ball_velocity
+level = 1
 
 camera.clear("black")
 name_text = gamebox.from_text(400, 200, "Enter your name in the run window.", 50, "blue")
@@ -39,10 +42,11 @@ while name == "":
 
 
 def tick(keys):
-    global start, screen, counter, start_movement, lives, health, health_x, health_color, lost, start_movement
+    global start, screen, counter, start_movement, lives, health, health_x, health_color, lost, start_movement, level, score, high_name
     high_score = 0
-    if counter // 30 > high_score:
+    if score > high_score:
         high_score = counter // 30
+        high_name = name
     camera.clear("black")
     for l in sides:
         camera.draw(l)
@@ -103,7 +107,7 @@ def tick(keys):
         rules3 = gamebox.from_text(400, 290, "3.) The player gets 3 lives. A life is lost when the ball go out of play.", 25, "orange")
         rules4 = gamebox.from_text(400, 320, "4.) The ball moves faster as the levels go on.", 25, "orange")
         rules5 = gamebox.from_text(400, 350, "5.) There are 8 levels, one for each of UVA's ACC opponents this year. ", 25, "orange")
-        rules6 = gamebox.from_text(400, 380, "6.) You get points based on how fast you beat the levels. The lower the score, the better.", 25, "orange")
+        rules6 = gamebox.from_text(400, 380, "6.) You get points 15 points for every broken brick. Be sure to check you high!", 25, "orange")
 
         camera.draw(home1)
         camera.draw(desc)
@@ -122,14 +126,13 @@ def tick(keys):
     elif start is False and screen == 2:
         home2 = gamebox.from_text(90, 13, "Press 0 to return home.", 22, "orange")
         high1 = gamebox.from_text(400, 40, "High Score", 35, "orange")
-        high2 = gamebox.from_text(400, 70, "The high score is " + str(high_score), 35, "orange")
+        high2 = gamebox.from_text(400, 70, "The high score is " + str(high_score) + " set by " + high_name , 35, "orange")
 
         camera.draw(home2)
         camera.draw(high1)
         camera.draw(high2)
 
     elif start:
-        level = 1
         if level == 1:
             file_loc = "Pitt Logo Resized.png"
         if level == 2:
@@ -146,7 +149,7 @@ def tick(keys):
             file_loc = "Georgia Tech Logo Resized.png"
         if level == 8:
             file_loc = "Virginia Tech Logo Resized.png"
-        if len(walls) == 0:
+        if len(walls) == 0 and level < 9:
             for i in range(100, 750, 50):
                 for j in range(150, 225, 25):
                     if j == 150 or j == 200:
@@ -154,6 +157,8 @@ def tick(keys):
                     elif j == 175:
                         walls.append(gamebox.from_image(i - 25, j, file_loc))
             level += 1
+            ball.xspeed += .25
+            ball.yspeed += .25
         if pygame.K_SPACE in keys:
             start_movement = True
             lives = 3
@@ -180,7 +185,7 @@ def tick(keys):
                 start = False
 
             time = str(counter // 30)
-            time_tot = gamebox.from_text(700, 15, "Score: " + time, 22, "orange")
+            time_tot = gamebox.from_text(730, 15, "Timer: " + time, 22, "orange")
 
             if pygame.K_RIGHT in keys:
                 platform.x += 10
@@ -189,18 +194,18 @@ def tick(keys):
 
             if ball.top_touches(platform) or ball.bottom_touches(platform):
                 ball.yspeed = -ball.yspeed
-            elif ball.right_touches(platform) or ball.left_touches(platform):
-                ball.xspeed = -ball.xspeed
+
 
             for k in walls:
                 camera.draw(k)
                 if ball.top_touches(k) or ball.bottom_touches(k):
                     walls.remove(k)
                     ball.yspeed = -ball.yspeed
+                    score += 15
                 elif ball.right_touches(k) or ball.left_touches(k):
                     walls.remove(k)
                     ball.xspeed = -ball.xspeed
-
+                    score += 15
             a = 0
             while a < 3:
                 if a == 0 or a == 2:
@@ -214,6 +219,25 @@ def tick(keys):
                 camera.draw(sides[a])
                 a += 1
 
+                score_text = gamebox.from_text(45, 12, "Score: " + str(score), 20, "orange")
+
+                if level == 8 and len(walls) == 0:
+                    camera.clear("black")
+                    while lives > 0:
+                        score += 1000
+                        lives -= 1
+                    win_words = gamebox.from_text(400, 200, "Congrats! You win! Your score was " + str(score), 40, "orange")
+                    go_home_words = gamebox.from_text(400, 250, "Press 0 to go home.")
+                    if pygame.K_0 in keys:
+                        score = 0
+                        counter = 0
+                        start = False
+                        start_movement = False
+                        screen = 0
+                        lives = 3
+                    camera.draw(win_words)
+                    camera.draw(go_home_words)
+                camera.draw(score_text)
                 camera.draw(time_tot)
                 camera.draw(platform)
                 camera.draw(ball)
@@ -222,14 +246,6 @@ def tick(keys):
 
     camera.display()
 
-    # Start window so that you press a key to start
-    # Set up physics so that ball bounces at 90-angle
-    # Set up so that ball removes brick when ball touches brick
-    # Once bricks are gone, level should clear and restart with a faster-moving ball
-    # Game will keep a timer for how long it takes for each level to be beat
-    # Could also keep a high score doc and make as a menu option
-    # Could make level codes that could also be a menu option to access levels you had reached prior
-    # Or could instead make a user ID that allows you to save progress
 
 tps = 30
 gamebox.timer_loop(tps, tick)
