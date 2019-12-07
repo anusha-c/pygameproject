@@ -13,6 +13,9 @@ sides = [
 ]
 ball = gamebox.from_color(400, 300, "orange", 10, 10)
 platform = gamebox.from_color(400, 350, "blue", 200, 20)
+health = 100
+health_x = 620
+health_color = "green"
 start = False
 lost = False
 screen = 0
@@ -31,7 +34,8 @@ while name == "":
 
 
 def tick(keys):
-    global start, screen, counter, start_movement, lost, lives
+    global start, screen, counter, start_movement, lost, lives, health, health_x, health_color
+    health_bar = gamebox.from_color(health_x, 15, health_color, health, 10)
     high_score = 0
     if counter//30 > high_score:
         high_score = counter//30
@@ -160,10 +164,14 @@ def tick(keys):
         if start_movement:
             if ball.y > 400:
                 lives -= 1
+                health -= 40
+                health_x -= 20
+                if lives == 1:
+                    health_color = "red"
                 ball.x = 400
                 ball.y = 300
 
-            lives_display = gamebox.from_text(620, 15, "Lives: " + str(lives), 22, "orange")
+            lives_display = gamebox.from_text(530, 15, "Health: ", 22, "orange")
 
             if lives == 0:
                 lost = True
@@ -199,10 +207,9 @@ def tick(keys):
             camera.draw(platform)
             camera.draw(ball)
             camera.draw(lives_display)
+            camera.draw(health_bar)
 
             counter += 1
-
-
 
     camera.display()
 
@@ -217,4 +224,4 @@ def tick(keys):
 
 
 tps = 30
-gamebox.timer_loop(tps, tick) 
+gamebox.timer_loop(tps, tick)
